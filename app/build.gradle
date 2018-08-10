@@ -18,8 +18,36 @@ android {
         }
     }
 
-    println("git tag".execute().text.trim())
-    println("git rev-list HEAD --first-parent --count".execute().text.trim())
+    applicationVariants.all { variant ->
+        println("----- start -----")
+
+        def versionCode = "git rev-list HEAD --first-parent --count".execute().text.trim()
+        def tags = "git tag".execute().text.trim().tokenize();
+        def versionName = variant.buildType.name + "-";
+        if (tags)
+            versionName += tags[tags.size() - 1]
+        else
+            versionName += "0.0"
+
+        println("versionCode:\b${versionCode}")
+        println("versionName:\b${versionName}")
+
+        variant.mergedFlavor.versionCode = versionCode
+        variant.mergedFlavor.versionName = versionName
+
+
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                def fileName = "${versionName}.${versionCode}.apk"
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
+
+        println("----- end -----")
+    }
+
+
 }
 
 dependencies {
