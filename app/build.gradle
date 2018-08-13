@@ -23,23 +23,29 @@ android {
 
         def versionCode = "git rev-list HEAD --first-parent --count".execute().text.trim()
         def tags = "git tag".execute().text.trim().tokenize();
-        def versionName = variant.buildType.name + "-";
+        def versionName = "";
         if (tags)
             versionName += tags[tags.size() - 1]
         else
             versionName += "0.0"
+        versionName += ".${versionCode}"
+
+        if (variant.buildType.name != "release") {
+            versionName = variant.buildType.name + versionName
+        }
+
+
+        variant.mergedFlavor.versionCode = Integer.valueOf(versionCode.trim())
+        variant.mergedFlavor.versionName = versionName
 
         println("versionCode:\b${versionCode}")
         println("versionName:\b${versionName}")
-
-        variant.mergedFlavor.versionCode = versionCode
-        variant.mergedFlavor.versionName = versionName
 
 
         variant.outputs.each { output ->
             def outputFile = output.outputFile
             if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                def fileName = "${versionName}.${versionCode}.apk"
+                def fileName = "ddbx-${variant.buildType.name}-${versionName}.apk"
                 output.outputFile = new File(outputFile.parent, fileName)
             }
         }
